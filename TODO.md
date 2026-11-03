@@ -22,8 +22,12 @@
 
 ## Secure foundations
 - [x] Security headers, route manifest, demo-safe data, and documentation are present.
-- [ ] Implement real Manus OAuth, validated application sessions, and role-aware authorization.
-- [ ] Implement managed database migrations, server-only DAL functions, audit events, consent records, and private storage.
+- [x] Implement Supabase SSR/browser clients, Auth sign-in/sign-up/callback routes, and session refresh middleware.
+- [x] Implement Supabase database migrations, server-only data access boundaries, RLS policies, audit events, consent records, and role-escalation protection.
+- [x] Implement protected profile, pathway, and onboarding API routes with Zod validation and authenticated identity derivation.
+- [ ] Configure Supabase Auth email provider, production redirect URLs, and verified transactional email templates.
+- [ ] Add private storage buckets, upload MIME/signature validation, malware scanning, signed URLs, and retention policies.
+- [ ] Add platform-admin and organization-level reviewer authorization policies for privileged mutations.
 - [ ] Add CI, dependency scanning, secret scanning, CodeQL, automated tests, and staging security verification.
 
 ## Deferred by decision
