@@ -1,0 +1,14 @@
+{
+  "routes": [
+    { "path": "/", "title": "Winnie Career Development Platform" },
+    { "path": "/dashboard", "title": "Mentee dashboard" },
+    { "path": "/onboarding", "title": "Mentee onboarding" },
+    { "path": "/pathway", "title": "Pathway roadmap" },
+    { "path": "/portfolio", "title": "Portfolio evidence" },
+    { "path": "/mentors", "title": "Mentors" },
+    { "path": "/review", "title": "Review workspace" },
+    { "path": "/employer", "title": "Employer view" },
+    { "path": "/admin", "title": "Admin console" },
+    { "path": "/api/health", "title": "Health check" }
+  ]
+}
