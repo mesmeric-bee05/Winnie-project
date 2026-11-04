@@ -32,7 +32,7 @@ export function AuthForm({ mode, initialMessage = "" }: { mode: "sign-in" | "sig
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(initialMessage ? "error" : "idle");
   const [message, setMessage] = useState(initialMessage);
   const [needsVerification, setNeedsVerification] = useState(false);
-  const [googleEnabled, setGoogleEnabled] = useState<boolean | null>(null);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
   const [emailConfirmationRequired, setEmailConfirmationRequired] = useState(true);
 
   useEffect(() => {
