@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle2, Chrome, Loader2, ShieldCheck } from "lucide-react";
@@ -32,8 +32,25 @@ export function AuthForm({ mode, initialMessage = "" }: { mode: "sign-in" | "sig
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(initialMessage ? "error" : "idle");
   const [message, setMessage] = useState(initialMessage);
   const [needsVerification, setNeedsVerification] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState<boolean | null>(null);
+  const [emailConfirmationRequired, setEmailConfirmationRequired] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/auth/status", { cache: "no-store" }).then((response) => response.json()).then((data: { googleEnabled?: boolean; emailConfirmationRequired?: boolean }) => {
+      if (!active) return;
+      setGoogleEnabled(data.googleEnabled === true);
+      setEmailConfirmationRequired(data.emailConfirmationRequired !== false);
+    }).catch(() => { if (active) setGoogleEnabled(false); });
+    return () => { active = false; };
+  }, []);
 
   async function continueWithGoogle() {
+    if (googleEnabled === false) {
+      setStatus("error");
+      setMessage("Google sign-in is not enabled for this Winnie workspace yet. Use email sign-in, or ask the project owner to enable Google in Supabase Auth.");
+      return;
+    }
     setStatus("loading");
     setMessage("");
     try {
@@ -79,7 +96,7 @@ export function AuthForm({ mode, initialMessage = "" }: { mode: "sign-in" | "sig
       if (result.error) throw result.error;
       if (mode === "sign-up" && !result.data.session) {
         setStatus("success");
-        setMessage("Account created. Check your email and open the verification link before signing in.");
+        setMessage(emailConfirmationRequired ? "Account created. Check your email and open the verification link before signing in. If nothing arrives, check spam or ask the project owner to configure SMTP." : "Account created. You can now sign in to your private workspace.");
         return;
       }
       router.push("/dashboard");
@@ -114,7 +131,8 @@ export function AuthForm({ mode, initialMessage = "" }: { mode: "sign-in" | "sig
   return <div className="card card-pad" style={{ maxWidth: 540, margin: "0 auto" }}>
     <div style={{ display: "flex", gap: 10, alignItems: "center" }}><span className="brand-mark"><span>W</span></span><div><span className="eyebrow">{mode === "sign-in" ? "Return to your pathway" : "Create your account"}</span><h2 style={{ fontSize: 32, marginTop: 7 }}>{mode === "sign-in" ? "Continue the work." : "Make progress observable."}</h2></div></div>
     <p className="muted" style={{ marginTop: 15, lineHeight: 1.55, fontSize: 14 }}>{mode === "sign-in" ? "Sign in to access your private pathway, evidence and consent controls." : "Create a private account for your pathway, practical work and human feedback."}</p>
-    <button className="button button-secondary" type="button" onClick={continueWithGoogle} disabled={status === "loading"} style={{ width: "100%", marginTop: 21 }}><Chrome size={16} /> Continue with Google</button>
+    <button className="button button-secondary" type="button" onClick={continueWithGoogle} disabled={status === "loading" || googleEnabled === false} style={{ width: "100%", marginTop: 21, opacity: googleEnabled === false ? .58 : 1 }}><Chrome size={16} /> {googleEnabled === false ? "Google sign-in needs setup" : "Continue with Google"}</button>
+    {googleEnabled === false && <p className="helper" style={{ marginTop: 8 }}>Email sign-in is available now. Google requires a one-time Supabase provider setup.</p>}
     <div className="auth-divider"><span>or use email</span></div>
     <form onSubmit={submit} style={{ display: "grid", gap: 15 }}>
       {mode === "sign-up" && <div className="field"><label htmlFor="displayName">Your name</label><input id="displayName" value={displayName} onChange={(event) => setDisplayName(event.target.value)} autoComplete="name" required /></div>}
