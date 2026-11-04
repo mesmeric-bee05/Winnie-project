@@ -17,8 +17,8 @@ export function MainNav() {
         </nav>
         <div className="nav-actions">
           <Link href="/auth/sign-in" className="button button-quiet button-sm">Sign in</Link>
-          <Link href="/dashboard" className="button button-secondary button-sm">Open demo</Link>
-          <Link href="/onboarding" className="button button-primary button-sm">Start your pathway <ArrowUpRight size={15} /></Link>
+          <Link href="/dashboard" className="button button-secondary button-sm">Open workspace</Link>
+          <Link href="/auth/sign-up" className="button button-primary button-sm">Create account <ArrowUpRight size={15} /></Link>
         </div>
       </div>
     </header>

@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, Chrome, Loader2, ShieldCheck } from "lucide-react";
 import { z } from "zod";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -19,6 +19,7 @@ function readableAuthError(message: string) {
   if (normalized.includes("invalid login credentials")) return "The email or password is incorrect. Check both fields and try again.";
   if (normalized.includes("already registered") || normalized.includes("user already registered")) return "An account with this email already exists. Sign in instead.";
   if (normalized.includes("rate limit") || normalized.includes("too many requests")) return "Too many attempts were made. Wait a few minutes before trying again.";
+  if (normalized.includes("provider") || normalized.includes("google")) return "Google sign-in is not enabled for this workspace yet. Use email sign-in or ask the project owner to finish the Google provider setup.";
   if (normalized.includes("redirect")) return "The verification redirect is not configured for this environment yet.";
   return "We could not complete that request. Check your details and try again.";
 }
@@ -31,6 +32,24 @@ export function AuthForm({ mode, initialMessage = "" }: { mode: "sign-in" | "sig
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(initialMessage ? "error" : "idle");
   const [message, setMessage] = useState(initialMessage);
   const [needsVerification, setNeedsVerification] = useState(false);
+
+  async function continueWithGoogle() {
+    setStatus("loading");
+    setMessage("");
+    try {
+      const { error } = await createSupabaseBrowserClient().auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: { prompt: "select_account" },
+        },
+      });
+      if (error) throw error;
+    } catch (error) {
+      setStatus("error");
+      setMessage(readableAuthError(error instanceof Error ? error.message : "Google provider unavailable"));
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -95,10 +114,12 @@ export function AuthForm({ mode, initialMessage = "" }: { mode: "sign-in" | "sig
   return <div className="card card-pad" style={{ maxWidth: 540, margin: "0 auto" }}>
     <div style={{ display: "flex", gap: 10, alignItems: "center" }}><span className="brand-mark"><span>W</span></span><div><span className="eyebrow">{mode === "sign-in" ? "Return to your pathway" : "Create your account"}</span><h2 style={{ fontSize: 32, marginTop: 7 }}>{mode === "sign-in" ? "Continue the work." : "Make progress observable."}</h2></div></div>
     <p className="muted" style={{ marginTop: 15, lineHeight: 1.55, fontSize: 14 }}>{mode === "sign-in" ? "Sign in to access your private pathway, evidence and consent controls." : "Create a private account for your pathway, practical work and human feedback."}</p>
-    <form onSubmit={submit} style={{ display: "grid", gap: 15, marginTop: 24 }}>
+    <button className="button button-secondary" type="button" onClick={continueWithGoogle} disabled={status === "loading"} style={{ width: "100%", marginTop: 21 }}><Chrome size={16} /> Continue with Google</button>
+    <div className="auth-divider"><span>or use email</span></div>
+    <form onSubmit={submit} style={{ display: "grid", gap: 15 }}>
       {mode === "sign-up" && <div className="field"><label htmlFor="displayName">Your name</label><input id="displayName" value={displayName} onChange={(event) => setDisplayName(event.target.value)} autoComplete="name" required /></div>}
       <div className="field"><label htmlFor="email">Email address</label><input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required /></div>
-      <div className="field"><label htmlFor="password">Password</label><input id="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === "sign-in" ? "current-password" : "new-password"} minLength={8} required /><span className="helper">At least 8 characters. Use a unique password for this service.</span></div>
+      <div className="field"><label htmlFor="password">Password</label><input id="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === "sign-in" ? "current-password" : "new-password"} minLength={8} required /><span className="helper">At least 8 characters. Use a unique password for this service.</span>{mode === "sign-in" && <Link href="/auth/forgot-password" className="helper" style={{ color: "var(--teal)", fontWeight: 800 }}>Forgot your password?</Link>}</div>
       {message && <div role={status === "error" ? "alert" : "status"} aria-live="polite" className={`pill ${status === "error" ? "pill-amber" : "pill-mint"}`} style={{ lineHeight: 1.45, whiteSpace: "normal" }}>{status === "success" ? <CheckCircle2 size={14} /> : null}{message}</div>}
       <button className="button button-primary" type="submit" disabled={status === "loading"}>{status === "loading" ? <Loader2 size={15} className="spin" /> : <ArrowRight size={15} />}{status === "loading" ? "Working…" : mode === "sign-in" ? "Sign in" : "Create account"}</button>
       {needsVerification && <button className="button button-secondary" type="button" onClick={resendVerification} disabled={status === "loading"}>Send verification email again</button>}

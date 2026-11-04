@@ -3,6 +3,8 @@
     { "path": "/", "title": "Winnie Career Development Platform" },
     { "path": "/auth/sign-in", "title": "Sign in" },
     { "path": "/auth/sign-up", "title": "Create account" },
+    { "path": "/auth/forgot-password", "title": "Forgot password" },
+    { "path": "/auth/reset-password", "title": "Reset password" },
     { "path": "/auth/verify-email", "title": "Verify email" },
     { "path": "/dashboard", "title": "Mentee dashboard" },
     { "path": "/onboarding", "title": "Mentee onboarding" },

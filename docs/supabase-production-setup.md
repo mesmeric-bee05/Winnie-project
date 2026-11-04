@@ -34,6 +34,18 @@ Recommended templates:
 
 The application now reports actionable errors for unconfirmed email, invalid credentials, duplicate accounts, rate limits and redirect configuration failures. It also provides a “Send verification email again” action after an unconfirmed sign-in.
 
+## 2A. Google OAuth
+
+The sign-in and sign-up panels now expose the same **Continue with Google** flow. Supabase must be configured before the button can complete authentication:
+
+1. In Google Cloud Console, create an OAuth 2.0 Web client under the project’s consent screen.
+2. Add the exact Winnie application origins as authorized JavaScript origins: `http://localhost:3000`, the current managed Preview origin, and the published origin.
+3. Add the Supabase callback URL as an authorized redirect URI: `https://fnzfemarufeeiwgubrut.supabase.co/auth/v1/callback`.
+4. In Supabase Dashboard → Authentication → Providers → Google, enable Google and enter the Google client ID and client secret.
+5. Keep the application redirect allow-list from section 1 narrow. Winnie redirects the completed provider session to `/auth/callback`, which exchanges the code server-side and then sends the user to `/dashboard`.
+
+The Google secret must be entered only in Supabase Dashboard. Do not place it in `.env.local`, GitHub Actions, browser code or the repository.
+
 ## 3. Private Storage bucket
 
 The bucket metadata has been applied to the Winnie project:
@@ -78,7 +90,7 @@ for delete to authenticated
 using (bucket_id = 'portfolio-evidence' and owner_id = (select auth.uid())::text);
 ```
 
-The application exposes authenticated server routes for preparing a signed upload and a one-hour signed download. The upload route validates filename, MIME type, size and a random user-owned path. The download route accepts only a path under the current user’s own UUID prefix. A future employer-consented download route must check an active `employer_views` record before issuing a URL.
+The application exposes authenticated server routes for preparing a signed upload, verifying the uploaded bytes and issuing a one-hour signed download. The upload route validates filename, MIME type, size and a random user-owned path. The verification route checks the declared type against the PDF/PNG/JPEG/WebP/text magic bytes and rejects the EICAR antivirus test marker before deleting the object. This is a deterministic safety gate, not a substitute for a production malware scanning service: connect a quarantining ClamAV or managed scanning provider before accepting untrusted client documents. The download route accepts only a path under the current user’s own UUID prefix. A future employer-consented download route must check an active `employer_views` record before issuing a URL.
 
 ## 4. Manual verification
 

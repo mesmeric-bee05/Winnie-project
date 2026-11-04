@@ -16,6 +16,8 @@ The Winnie project uses the Supabase project named `Winnie` for the application 
 - Improved sign-in/sign-up UX with fixed verification callback redirects, actionable error messages and verification-email resend.
 - Private `portfolio-evidence` bucket metadata: 10 MiB limit and allow-listed MIME types.
 - Authenticated signed-upload and signed-download preparation routes with path ownership checks.
+- Authenticated post-upload evidence verification for magic bytes, size and the EICAR test marker, with invalid objects removed.
+- Authenticated mentor-session request API with verified-mentor checks and trusted in-app notifications created by a database trigger.
 - Bounded in-process mutation rate limiting as defense in depth. A distributed production limiter still requires Redis or an edge provider.
 - CI lint, typecheck, tests, production build, Gitleaks, CodeQL and Dependabot configuration.
 
@@ -24,6 +26,8 @@ The Winnie project uses the Supabase project named `Winnie` for the application 
 The current authorized MCP surface cannot change Supabase Auth SMTP, URL configuration or `storage.objects` ownership-level policies. The exact copy-paste steps are in [`docs/supabase-production-setup.md`](./supabase-production-setup.md) and [`docs/supabase-storage-setup.sql`](./supabase-storage-setup.sql).
 
 The project owner must configure a verified production SMTP provider, narrow Site URL/redirect allow lists, run the Storage object policies, and test a real inbox. Do not accept real client files until the Storage policies, malware scanning and retention/deletion workflow are verified.
+
+The mentor request API is ready for a verified mentor directory. Calendar availability, confirmed time slots, timezone conflict checks and outbound email/push delivery remain the next scheduling phase; the current trigger creates an in-app notification only.
 
 Payments, webhooks, KYC/KYB, tax, refunds, payouts and investor workflows remain intentionally deferred until providers, legal terms and approval are available.
 
