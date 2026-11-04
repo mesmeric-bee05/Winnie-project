@@ -1,6 +1,6 @@
 # Supabase integration
 
-The Winnie project now uses the Supabase project named `Winnie` for the application domain schema. The database is in the `eu-central-1` region and the initial schema migration is applied.
+The Winnie project uses the Supabase project named `Winnie` for the application domain schema. The database is in the `eu-central-1` region and the core migrations are applied.
 
 ## Implemented
 
@@ -10,12 +10,21 @@ The Winnie project now uses the Supabase project named `Winnie` for the applicat
 - Owner and consent-scoped policies for mentee data, portfolio evidence, endorsements and employer views.
 - Auth user bootstrap trigger that creates a private profile.
 - Privilege-escalation guard that prevents a user from changing `app_role`.
-- Auditable `record_audit_event` RPC for authenticated mutations.
+- Trigger-based audit logging for pathway and profile changes. There is no client-callable audit-writing RPC.
 - Non-personal seed catalog for the first product-design pathway.
-- Supabase browser/server client helpers, session refresh middleware, auth routes and typed API boundaries.
+- Supabase browser/server client helpers, Next.js 16 proxy session refresh, auth routes and typed API boundaries.
+- Improved sign-in/sign-up UX with fixed verification callback redirects, actionable error messages and verification-email resend.
+- Private `portfolio-evidence` bucket metadata: 10 MiB limit and allow-listed MIME types.
+- Authenticated signed-upload and signed-download preparation routes with path ownership checks.
+- Bounded in-process mutation rate limiting as defense in depth. A distributed production limiter still requires Redis or an edge provider.
+- CI lint, typecheck, tests, production build, Gitleaks, CodeQL and Dependabot configuration.
 
-## Required before production launch
+## Provider-owned setup still required
 
-The production environment must configure the Supabase Auth email provider, redirect URLs, email templates and rate limits. Storage buckets and malware scanning are still required before accepting portfolio files. A platform-admin policy layer and organization-level reviewer authorization must be added before enabling mentor, employer or admin mutations. Payments, webhooks, KYC/KYB, tax, refunds and payouts remain intentionally deferred.
+The current authorized MCP surface cannot change Supabase Auth SMTP, URL configuration or `storage.objects` ownership-level policies. The exact copy-paste steps are in [`docs/supabase-production-setup.md`](./supabase-production-setup.md) and [`docs/supabase-storage-setup.sql`](./supabase-storage-setup.sql).
+
+The project owner must configure a verified production SMTP provider, narrow Site URL/redirect allow lists, run the Storage object policies, and test a real inbox. Do not accept real client files until the Storage policies, malware scanning and retention/deletion workflow are verified.
+
+Payments, webhooks, KYC/KYB, tax, refunds, payouts and investor workflows remain intentionally deferred until providers, legal terms and approval are available.
 
 Never commit the database connection string, service-role key or any other secret. Rotate the database password because it was exposed during setup, then replace the protected project secret after rotation.

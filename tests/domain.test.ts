@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mentee, milestones, tasks } from "@/lib/demo";
+import { createEvidencePath, isOwnedEvidencePath } from "@/lib/storage";
 
 describe("Winnie MVP progression model", () => {
   it("has a target role and visible progress", () => {
@@ -11,5 +12,12 @@ describe("Winnie MVP progression model", () => {
   it("keeps milestone ordering and task evidence visible", () => {
     expect(milestones.map((milestone) => milestone.id)).toEqual(["01", "02", "03", "04"]);
     expect(tasks.some((task) => task.deliverable.includes("flow"))).toBe(true);
+  });
+
+  it("keeps evidence paths scoped to the authenticated owner", () => {
+    const owner = "11111111-1111-4111-8111-111111111111";
+    const path = createEvidencePath(owner, "case study.pdf", "application/pdf");
+    expect(isOwnedEvidencePath(path, owner)).toBe(true);
+    expect(isOwnedEvidencePath(path, "22222222-2222-4222-8222-222222222222")).toBe(false);
   });
 });

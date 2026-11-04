@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 const onboardingSchema = z.object({
   targetRole: z.enum(["Product design", "Software development", "Growth & marketing"]),
@@ -12,6 +13,8 @@ const onboardingSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const rate = checkRateLimit(request, "onboarding", 10, 60 * 60 * 1000);
+    if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
     const supabase = await createSupabaseServerClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
@@ -38,7 +41,6 @@ export async function POST(request: Request) {
     if (parsed.data.employerVisibility) {
       await supabase.from("consents").insert({ user_id: user.id, consent_type: "data_sharing", version: "2026-11-03", purpose: "Future consent-scoped employer profile sharing", granted: true, scope: { portfolio: true, milestones: true, endorsements: true }, granted_at: new Date().toISOString() });
     }
-    await supabase.rpc("record_audit_event", { p_action: "onboarding_completed", p_entity_type: "mentee_pathway", p_entity_id: menteePathway.id, p_metadata: { target_role: parsed.data.targetRole, employer_visibility: parsed.data.employerVisibility } });
     return NextResponse.json({ profile, pathway, menteePathway }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Onboarding could not be saved. Please try again." }, { status: 503 });
